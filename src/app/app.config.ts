@@ -4,7 +4,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule } from '@angular/material/paginator'; // Добавлено
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatCardModule } from '@angular/material/card'; // Import MatCardModule
 
 import { routes } from './app.routes';
 
@@ -15,6 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     MatToolbarModule,
     MatTableModule,
-    MatPaginatorModule, // Добавлено
+    MatPaginatorModule,
+    MatCardModule, // Add MatCardModule to providers
   ],
 };
