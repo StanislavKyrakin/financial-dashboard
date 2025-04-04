@@ -6,45 +6,76 @@ import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-general-table',
   standalone: true,
   imports: [
     AsyncPipe,
-    MatTableModule,
     NgIf,
+    MatTableModule,
     MatFormFieldModule,
     MatInputModule,
     MatCheckboxModule,
+    MatPaginatorModule, // Добавлено
   ],
   template: `
     <h2>Общая таблица</h2>
     <div class="filters">
       <mat-form-field>
         <mat-label>Дата выдачи от</mat-label>
-        <input matInput type="date" [value]="issuanceDateFrom()" (input)="issuanceDateFrom.set($any($event.target).value)" />
+        <input
+          matInput
+          type="date"
+          [value]="issuanceDateFrom()"
+          (input)="issuanceDateFrom.set($any($event.target).value)"
+        />
       </mat-form-field>
 
       <mat-form-field>
         <mat-label>Дата выдачи до</mat-label>
-        <input matInput type="date" [value]="issuanceDateTo()" (input)="issuanceDateTo.set($any($event.target).value)" />
+        <input
+          matInput
+          type="date"
+          [value]="issuanceDateTo()"
+          (input)="issuanceDateTo.set($any($event.target).value)"
+        />
       </mat-form-field>
 
       <mat-form-field>
         <mat-label>Дата возврата от</mat-label>
-        <input matInput type="date" [value]="returnDateFrom()" (input)="returnDateFrom.set($any($event.target).value)" />
+        <input
+          matInput
+          type="date"
+          [value]="returnDateFrom()"
+          (input)="returnDateFrom.set($any($event.target).value)"
+        />
       </mat-form-field>
 
       <mat-form-field>
         <mat-label>Дата возврата до</mat-label>
-        <input matInput type="date" [value]="returnDateTo()" (input)="returnDateTo.set($any($event.target).value)" />
+        <input
+          matInput
+          type="date"
+          [value]="returnDateTo()"
+          (input)="returnDateTo.set($any($event.target).value)"
+        />
       </mat-form-field>
 
-      <mat-checkbox [checked]="showOverdue()" (change)="showOverdue.set($event.checked)">Просроченные кредиты</mat-checkbox>
+      <mat-checkbox
+        [checked]="showOverdue()"
+        (change)="showOverdue.set($event.checked)"
+        >Просроченные кредиты</mat-checkbox
+      >
     </div>
 
-    <table mat-table *ngIf="filteredData$ | async as data" [dataSource]="data" class="mat-elevation-z8">
+    <table
+      mat-table
+      *ngIf="filteredData$ | async as data"
+      [dataSource]="getPagedData(data)"
+      class="mat-elevation-z8"
+    >
       <ng-container matColumnDef="user">
         <th mat-header-cell *matHeaderCellDef>Пользователь</th>
         <td mat-cell *matCellDef="let row">{{ row.user }}</td>
@@ -71,13 +102,25 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
       </ng-container>
 
       <ng-container matColumnDef="actual_return_date">
-        <th mat-header-cell *matHeaderCellDef>Фактическая дата возврата</th>
+        <th mat-header-cell *matHeaderCellDef>
+          Фактическая дата возврата
+        </th>
         <td mat-cell *matCellDef="let row">{{ row.actual_return_date }}</td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
     </table>
+
+    <mat-paginator
+      [length]="dataLength"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[5, 10, 25, 100]"
+      (page)="handlePageEvent($event)"
+      aria-label="Select page"
+      *ngIf="filteredData$ | async"
+    >
+    </mat-paginator>
   `,
   styles: [
     `
@@ -111,12 +154,18 @@ export class GeneralTableComponent implements OnInit {
   returnDateTo = signal<string | null>(null);
   showOverdue = signal<boolean>(false);
 
+  dataLength = 0; // Добавлено
+  pageSize = 10; // Добавлено
+  pageIndex = 0; // Добавлено
+
   constructor(private dataService: DataService) {}
 
   ngOnInit(): void {
     this.data$ = this.dataService.getData();
     this.filteredData$ = this.data$;
-    this.filterData(); // Вызываем фильтрацию при инициализации компонента.
+    this.filterData();
+
+    this.data$.subscribe((data) => (this.dataLength = data.length)); // Добавлено
   }
 
   filterData(): void {
@@ -127,19 +176,32 @@ export class GeneralTableComponent implements OnInit {
           let returnDateFilter = true;
           let overdueFilter = true;
 
-          if (this.issuanceDateFrom() && row.issuance_date < this.issuanceDateFrom()!) {
+          if (
+            this.issuanceDateFrom() &&
+            row.issuance_date < this.issuanceDateFrom()!
+          ) {
             issuanceDateFilter = false;
           }
 
-          if (this.issuanceDateTo() && row.issuance_date > this.issuanceDateTo()!) {
+          if (
+            this.issuanceDateTo() && row.issuance_date > this.issuanceDateTo()!
+          ) {
             issuanceDateFilter = false;
           }
 
-          if (this.returnDateFrom() && row.actual_return_date && row.actual_return_date < this.returnDateFrom()!) {
+          if (
+            this.returnDateFrom() &&
+            row.actual_return_date &&
+            row.actual_return_date < this.returnDateFrom()!
+          ) {
             returnDateFilter = false;
           }
 
-          if (this.returnDateTo() && row.actual_return_date && row.actual_return_date > this.returnDateTo()!) {
+          if (
+            this.returnDateTo() &&
+            row.actual_return_date &&
+            row.actual_return_date > this.returnDateTo()!
+          ) {
             returnDateFilter = false;
           }
 
@@ -159,5 +221,21 @@ export class GeneralTableComponent implements OnInit {
         })
       )
     );
+
+    this.filteredData$.subscribe((data) => {
+      this.pageIndex = 0;
+      this.dataLength = data.length;
+    }); // Добавлено
   }
+
+  getPagedData(data: any[]): any[] {
+    const startIndex = this.pageIndex * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    return data.slice(startIndex, endIndex);
+  } // Добавлено
+
+  handlePageEvent(e: PageEvent): void {
+    this.pageSize = e.pageSize;
+    this.pageIndex = e.pageIndex;
+  } // Добавлено
 }
