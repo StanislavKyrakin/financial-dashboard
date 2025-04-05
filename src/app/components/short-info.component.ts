@@ -3,6 +3,7 @@ import { DataService } from '../services/data.service';
 import { Observable, map } from 'rxjs';
 import { AsyncPipe, NgFor, KeyValuePipe, NgIf } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-short-info',
@@ -13,12 +14,24 @@ import { MatCardModule } from '@angular/material/card';
     MatCardModule,
     KeyValuePipe,
     NgIf,
+    MatButtonModule, // Add MatButtonModule
   ],
   template: `
     <h2>Краткая информация</h2>
 
+    <div *ngIf="data$ | async as data" class="buttons-container">
+      <button mat-button (click)="selectedMetric = 'credits'">Кількість виданих кредитів</button>
+      <button mat-button (click)="selectedMetric = 'average'">Середня сума кредитів</button>
+      <button mat-button (click)="selectedMetric = 'totalAmount'">Загальна сума кредитів</button>
+      <button mat-button (click)="selectedMetric = 'totalPercent'">Загальна сума відсотків</button>
+      <button mat-button (click)="selectedMetric = 'returned'">Кількість повернених кредитів</button>
+      <button mat-button (click)="selectedMetric = 'topUsersCredits'">Топ-10 користувачів (кількість кредитів)</button>
+      <button mat-button (click)="selectedMetric = 'topUsersPercent'">Топ-10 користувачів (сума відсотків)</button>
+      <button mat-button (click)="selectedMetric = 'topUsersRatio'">Топ-10 користувачів (співвідношення)</button>
+    </div>
+
     <div *ngIf="data$ | async as data">
-      <mat-card>
+      <mat-card *ngIf="selectedMetric === 'credits'">
         <mat-card-title>Кількість виданих кредитів по місяцях</mat-card-title>
         <mat-card-content>
           <p *ngFor="let item of getCreditsByMonth(data) | keyvalue">
@@ -27,7 +40,7 @@ import { MatCardModule } from '@angular/material/card';
         </mat-card-content>
       </mat-card>
 
-      <mat-card>
+      <mat-card *ngIf="selectedMetric === 'average'">
         <mat-card-title>Середня сума видачі кредитів по місяцях</mat-card-title>
         <mat-card-content>
           <p *ngFor="let item of getAverageCreditAmountByMonth(data) | keyvalue">
@@ -36,7 +49,7 @@ import { MatCardModule } from '@angular/material/card';
         </mat-card-content>
       </mat-card>
 
-      <mat-card>
+      <mat-card *ngIf="selectedMetric === 'totalAmount'">
         <mat-card-title>Загальна сума виданих кредитів по місяцях</mat-card-title>
         <mat-card-content>
           <p *ngFor="let item of getTotalCreditAmountByMonth(data) | keyvalue">
@@ -45,7 +58,7 @@ import { MatCardModule } from '@angular/material/card';
         </mat-card-content>
       </mat-card>
 
-      <mat-card>
+      <mat-card *ngIf="selectedMetric === 'totalPercent'">
         <mat-card-title>Загальна сума нарахованих відсотків по місяцях</mat-card-title>
         <mat-card-content>
           <p *ngFor="let item of getTotalPercentByMonth(data) | keyvalue">
@@ -54,7 +67,7 @@ import { MatCardModule } from '@angular/material/card';
         </mat-card-content>
       </mat-card>
 
-      <mat-card>
+      <mat-card *ngIf="selectedMetric === 'returned'">
         <mat-card-title>Кількість повернених кредитів по місяцях</mat-card-title>
         <mat-card-content>
           <p *ngFor="let item of getReturnedCreditsByMonth(data) | keyvalue">
@@ -63,7 +76,7 @@ import { MatCardModule } from '@angular/material/card';
         </mat-card-content>
       </mat-card>
 
-      <mat-card>
+      <mat-card *ngIf="selectedMetric === 'topUsersCredits'">
         <mat-card-title>Топ-10 користувачів за кількістю отриманих кредитів</mat-card-title>
         <mat-card-content>
           <p *ngFor="let item of getTopUsersByCredits(data)">
@@ -72,7 +85,7 @@ import { MatCardModule } from '@angular/material/card';
         </mat-card-content>
       </mat-card>
 
-      <mat-card>
+      <mat-card *ngIf="selectedMetric === 'topUsersPercent'">
         <mat-card-title>Топ-10 користувачів за сумою сплачених відсотків</mat-card-title>
         <mat-card-content>
           <p *ngFor="let item of getTopUsersByPercent(data)">
@@ -81,7 +94,7 @@ import { MatCardModule } from '@angular/material/card';
         </mat-card-content>
       </mat-card>
 
-      <mat-card>
+      <mat-card *ngIf="selectedMetric === 'topUsersRatio'">
         <mat-card-title>Топ-10 користувачів з найбільшим співвідношенням відсотків до суми кредиту</mat-card-title>
         <mat-card-content>
           <p *ngFor="let item of getTopUsersByPercentRatio(data)">
@@ -96,11 +109,19 @@ import { MatCardModule } from '@angular/material/card';
       mat-card {
         margin-bottom: 20px;
       }
+
+      .buttons-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
     `,
   ],
 })
 export class ShortInfoComponent implements OnInit {
   data$!: Observable<any[]>;
+  selectedMetric: string | null = null;
 
   constructor(private dataService: DataService) {}
 
