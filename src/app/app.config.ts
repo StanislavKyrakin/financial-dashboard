@@ -5,7 +5,8 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatCardModule } from '@angular/material/card'; // Import MatCardModule
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
 
 import { routes } from './app.routes';
 
@@ -17,6 +18,7 @@ export const appConfig: ApplicationConfig = {
     MatToolbarModule,
     MatTableModule,
     MatPaginatorModule,
-    MatCardModule, // Add MatCardModule to providers
+    MatCardModule,
+    MatButtonModule,
   ],
 };

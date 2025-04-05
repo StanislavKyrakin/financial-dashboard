@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { GeneralTableComponent } from './components/general-table.component'; // Проверить импорт
+import { GeneralTableComponent } from './components/general-table.component';
 import { ShortInfoComponent } from './components/short-info.component';
 
 export const routes: Routes = [

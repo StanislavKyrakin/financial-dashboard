@@ -14,20 +14,36 @@ import { MatButtonModule } from '@angular/material/button';
     MatCardModule,
     KeyValuePipe,
     NgIf,
-    MatButtonModule, // Add MatButtonModule
+    MatButtonModule,
   ],
   template: `
     <h2>Краткая информация</h2>
 
     <div *ngIf="data$ | async as data" class="buttons-container">
-      <button mat-button (click)="selectedMetric = 'credits'">Кількість виданих кредитів</button>
-      <button mat-button (click)="selectedMetric = 'average'">Середня сума кредитів</button>
-      <button mat-button (click)="selectedMetric = 'totalAmount'">Загальна сума кредитів</button>
-      <button mat-button (click)="selectedMetric = 'totalPercent'">Загальна сума відсотків</button>
-      <button mat-button (click)="selectedMetric = 'returned'">Кількість повернених кредитів</button>
-      <button mat-button (click)="selectedMetric = 'topUsersCredits'">Топ-10 користувачів (кількість кредитів)</button>
-      <button mat-button (click)="selectedMetric = 'topUsersPercent'">Топ-10 користувачів (сума відсотків)</button>
-      <button mat-button (click)="selectedMetric = 'topUsersRatio'">Топ-10 користувачів (співвідношення)</button>
+      <button mat-button (click)="selectedMetric = 'credits'">
+        Кількість виданих кредитів
+      </button>
+      <button mat-button (click)="selectedMetric = 'average'">
+        Середня сума кредитів
+      </button>
+      <button mat-button (click)="selectedMetric = 'totalAmount'">
+        Загальна сума кредитів
+      </button>
+      <button mat-button (click)="selectedMetric = 'totalPercent'">
+        Загальна сума відсотків
+      </button>
+      <button mat-button (click)="selectedMetric = 'returned'">
+        Кількість повернених кредитів
+      </button>
+      <button mat-button (click)="selectedMetric = 'topUsersCredits'">
+        Топ-10 користувачів (кількість кредитів)
+      </button>
+      <button mat-button (click)="selectedMetric = 'topUsersPercent'">
+        Топ-10 користувачів (сума відсотків)
+      </button>
+      <button mat-button (click)="selectedMetric = 'topUsersRatio'">
+        Топ-10 користувачів (співвідношення)
+      </button>
     </div>
 
     <div *ngIf="data$ | async as data">
@@ -77,7 +93,9 @@ import { MatButtonModule } from '@angular/material/button';
       </mat-card>
 
       <mat-card *ngIf="selectedMetric === 'topUsersCredits'">
-        <mat-card-title>Топ-10 користувачів за кількістю отриманих кредитів</mat-card-title>
+        <mat-card-title>
+          Топ-10 користувачів за кількістю отриманих кредитів
+        </mat-card-title>
         <mat-card-content>
           <p *ngFor="let item of getTopUsersByCredits(data)">
             {{ item.user }}: {{ item.count }}
@@ -95,7 +113,10 @@ import { MatButtonModule } from '@angular/material/button';
       </mat-card>
 
       <mat-card *ngIf="selectedMetric === 'topUsersRatio'">
-        <mat-card-title>Топ-10 користувачів з найбільшим співвідношенням відсотків до суми кредиту</mat-card-title>
+        <mat-card-title>
+          Топ-10 користувачів з найбільшим співвідношенням відсотків до суми
+          кредиту
+        </mat-card-title>
         <mat-card-content>
           <p *ngFor="let item of getTopUsersByPercentRatio(data)">
             {{ item.user }}: {{ item.percentRatio.toFixed(2) }}

@@ -5,7 +5,7 @@ import { AsyncPipe, NgIf } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatCheckboxModule, MatCheckboxChange } from '@angular/material/checkbox';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 
 @Component({
@@ -18,7 +18,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
     MatFormFieldModule,
     MatInputModule,
     MatCheckboxModule,
-    MatPaginatorModule, // Добавлено
+    MatPaginatorModule,
   ],
   template: `
     <h2>Общая таблица</h2>
@@ -29,7 +29,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
           matInput
           type="date"
           [value]="issuanceDateFrom()"
-          (input)="issuanceDateFrom.set($any($event.target).value)"
+          (input)="onIssuanceDateFromChange($event)"
         />
       </mat-form-field>
 
@@ -39,7 +39,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
           matInput
           type="date"
           [value]="issuanceDateTo()"
-          (input)="issuanceDateTo.set($any($event.target).value)"
+          (input)="onIssuanceDateToChange($event)"
         />
       </mat-form-field>
 
@@ -49,7 +49,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
           matInput
           type="date"
           [value]="returnDateFrom()"
-          (input)="returnDateFrom.set($any($event.target).value)"
+          (input)="onReturnDateFromChange($event)"
         />
       </mat-form-field>
 
@@ -59,13 +59,13 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
           matInput
           type="date"
           [value]="returnDateTo()"
-          (input)="returnDateTo.set($any($event.target).value)"
+          (input)="onReturnDateToChange($event)"
         />
       </mat-form-field>
 
       <mat-checkbox
         [checked]="showOverdue()"
-        (change)="showOverdue.set($event.checked)"
+        (change)="onShowOverdueChange($event)"
         >Просроченные кредиты</mat-checkbox
       >
     </div>
@@ -154,9 +154,9 @@ export class GeneralTableComponent implements OnInit {
   returnDateTo = signal<string | null>(null);
   showOverdue = signal<boolean>(false);
 
-  dataLength = 0; // Добавлено
-  pageSize = 10; // Добавлено
-  pageIndex = 0; // Добавлено
+  dataLength = 0;
+  pageSize = 10;
+  pageIndex = 0;
 
   constructor(private dataService: DataService) {}
 
@@ -165,10 +165,11 @@ export class GeneralTableComponent implements OnInit {
     this.filteredData$ = this.data$;
     this.filterData();
 
-    this.data$.subscribe((data) => (this.dataLength = data.length)); // Добавлено
+    this.data$.subscribe((data) => (this.dataLength = data.length));
   }
 
   filterData(): void {
+    console.log('filterData() called');
     this.filteredData$ = this.data$.pipe(
       map((data) =>
         data.filter((row) => {
@@ -176,43 +177,36 @@ export class GeneralTableComponent implements OnInit {
           let returnDateFilter = true;
           let overdueFilter = true;
 
-          if (
-            this.issuanceDateFrom() &&
-            row.issuance_date < this.issuanceDateFrom()!
-          ) {
+          // Convert dates to Date objects for proper comparison
+          const issuanceDate = row.issuance_date ? new Date(row.issuance_date) : null;
+          const actualReturnDate = row.actual_return_date ? new Date(row.actual_return_date) : null;
+          const returnDate = row.return_date ? new Date(row.return_date) : null;
+          const issuanceDateFromFilter = this.issuanceDateFrom() ? new Date(this.issuanceDateFrom()!) : null;
+          const issuanceDateToFilter = this.issuanceDateTo() ? new Date(this.issuanceDateTo()!) : null;
+          const returnDateFromFilter = this.returnDateFrom() ? new Date(this.returnDateFrom()!) : null;
+          const returnDateToFilter = this.returnDateTo() ? new Date(this.returnDateTo()!) : null;
+          const today = new Date();
+
+          if (issuanceDateFromFilter && issuanceDate && issuanceDate < issuanceDateFromFilter) {
             issuanceDateFilter = false;
           }
 
-          if (
-            this.issuanceDateTo() && row.issuance_date > this.issuanceDateTo()!
-          ) {
+          if (issuanceDateToFilter && issuanceDate && issuanceDate > issuanceDateToFilter) {
             issuanceDateFilter = false;
           }
 
-          if (
-            this.returnDateFrom() &&
-            row.actual_return_date &&
-            row.actual_return_date < this.returnDateFrom()!
-          ) {
+          if (returnDateFromFilter && actualReturnDate && actualReturnDate < returnDateFromFilter) {
             returnDateFilter = false;
           }
 
-          if (
-            this.returnDateTo() &&
-            row.actual_return_date &&
-            row.actual_return_date > this.returnDateTo()!
-          ) {
+          if (returnDateToFilter && actualReturnDate && actualReturnDate > returnDateToFilter) {
             returnDateFilter = false;
           }
 
           if (this.showOverdue()) {
-            const returnDate = row.return_date;
-            const actualReturnDate = row.actual_return_date;
-            const today = new Date().toISOString().split('T')[0];
-
-            if (actualReturnDate) {
+            if (actualReturnDate && returnDate) { // Added returnDate check
               overdueFilter = actualReturnDate > returnDate;
-            } else {
+            } else if (returnDate) {
               overdueFilter = returnDate < today;
             }
           }
@@ -222,20 +216,56 @@ export class GeneralTableComponent implements OnInit {
       )
     );
 
+    console.log('filteredData$ updated:', this.filteredData$);
     this.filteredData$.subscribe((data) => {
       this.pageIndex = 0;
       this.dataLength = data.length;
-    }); // Добавлено
+      console.log('filteredData$ subscribe data:', data);
+    });
   }
 
   getPagedData(data: any[]): any[] {
     const startIndex = this.pageIndex * this.pageSize;
     const endIndex = startIndex + this.pageSize;
     return data.slice(startIndex, endIndex);
-  } // Добавлено
+  }
 
   handlePageEvent(e: PageEvent): void {
     this.pageSize = e.pageSize;
     this.pageIndex = e.pageIndex;
-  } // Добавлено
+  }
+
+  onIssuanceDateFromChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.issuanceDateFrom.set(target.value);
+    console.log('issuanceDateFrom changed:', this.issuanceDateFrom());
+    this.filterData();
+  }
+
+  onIssuanceDateToChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.issuanceDateTo.set(target.value);
+    console.log('issuanceDateTo changed:', this.issuanceDateTo());
+    this.filterData();
+  }
+
+  onReturnDateFromChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.returnDateFrom.set(target.value);
+    console.log('returnDateFrom changed:', this.returnDateFrom());
+    this.filterData();
+  }
+
+  onReturnDateToChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.returnDateTo.set(target.value);
+    console.log('returnDateTo changed:', this.returnDateTo());
+    this.filterData();
+  }
+
+  onShowOverdueChange(event: MatCheckboxChange): void {
+    this.showOverdue.set(event.checked);
+    console.log('showOverdue changed:', this.showOverdue());
+    this.filterData();
+  }
 }
