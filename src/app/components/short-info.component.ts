@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { DataService } from '../services/data.service';
 import { Observable, map } from 'rxjs';
-import { AsyncPipe, NgFor, KeyValuePipe, NgIf } from '@angular/common'; // Import KeyValuePipe and NgIf
+import { AsyncPipe, NgFor, KeyValuePipe, NgIf } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 
 @Component({
@@ -11,8 +11,8 @@ import { MatCardModule } from '@angular/material/card';
     AsyncPipe,
     NgFor,
     MatCardModule,
-    KeyValuePipe, // Add KeyValuePipe to imports
-    NgIf, // Add NgIf to imports
+    KeyValuePipe,
+    NgIf,
   ],
   template: `
     <h2>Краткая информация</h2>
@@ -59,6 +59,33 @@ import { MatCardModule } from '@angular/material/card';
         <mat-card-content>
           <p *ngFor="let item of getReturnedCreditsByMonth(data) | keyvalue">
             {{ item.key }}: {{ item.value }}
+          </p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-title>Топ-10 користувачів за кількістю отриманих кредитів</mat-card-title>
+        <mat-card-content>
+          <p *ngFor="let item of getTopUsersByCredits(data)">
+            {{ item.user }}: {{ item.count }}
+          </p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-title>Топ-10 користувачів за сумою сплачених відсотків</mat-card-title>
+        <mat-card-content>
+          <p *ngFor="let item of getTopUsersByPercent(data)">
+            {{ item.user }}: {{ item.totalPercent.toFixed(2) }}
+          </p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-title>Топ-10 користувачів з найбільшим співвідношенням відсотків до суми кредиту</mat-card-title>
+        <mat-card-content>
+          <p *ngFor="let item of getTopUsersByPercentRatio(data)">
+            {{ item.user }}: {{ item.percentRatio.toFixed(2) }}
           </p>
         </mat-card-content>
       </mat-card>
@@ -149,5 +176,43 @@ export class ShortInfoComponent implements OnInit {
       }
     });
     return result;
+  }
+
+  getTopUsersByCredits(data: any[]): { user: string; count: number }[] {
+    const userCounts: { [user: string]: number } = {};
+    data.forEach((item) => {
+      userCounts[item.user] = (userCounts[item.user] || 0) + 1;
+    });
+    return Object.entries(userCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([user, count]) => ({ user, count }));
+  }
+
+  getTopUsersByPercent(data: any[]): { user: string; totalPercent: number }[] {
+    const userPercents: { [user: string]: number } = {};
+    data.forEach((item) => {
+      if (item.actual_return_date) {
+        userPercents[item.user] = (userPercents[item.user] || 0) + item.percent;
+      }
+    });
+    return Object.entries(userPercents)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([user, totalPercent]) => ({ user, totalPercent }));
+  }
+
+  getTopUsersByPercentRatio(data: any[]): { user: string; percentRatio: number }[] {
+    const userRatios: { [user: string]: number } = {};
+    data.forEach((item) => {
+      if (item.actual_return_date) {
+        userRatios[item.user] =
+          (userRatios[item.user] || 0) + item.percent / item.body;
+      }
+    });
+    return Object.entries(userRatios)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([user, percentRatio]) => ({ user, percentRatio }));
   }
 }

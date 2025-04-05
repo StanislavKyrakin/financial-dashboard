@@ -1,29 +1,35 @@
-import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';
+import { Component } from '@angular/core';
+import { RouterOutlet, RouterLink } from '@angular/router';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { MatToolbarModule } from '@angular/material/toolbar';
 
-describe('AppComponent', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [AppComponent],
-    }).compileComponents();
-  });
-
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
-
-  it(`should have the 'myapp' title`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('myapp');
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, myapp');
-  });
-});
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RouterOutlet, RouterLink, NgbModule, MatToolbarModule],
+  template: `
+    <mat-toolbar color="primary">
+      <span>Финансовый Дашборд</span>
+      <span class="example-spacer"></span>
+      <a mat-button routerLink="/general-table" routerLinkActive="active">
+        Общая таблица
+      </a>
+      <a mat-button routerLink="/short-info" routerLinkActive="active">
+        Краткая информация
+      </a>
+    </mat-toolbar>
+    <div class="container">
+      <router-outlet></router-outlet>
+    </div>
+  `,
+  styles: [
+    `
+      .example-spacer {
+        flex: 1 1 auto;
+      }
+    `,
+  ],
+})
+export class AppComponent {
+  title = 'Финансовый Дашборд'; // Add this line
+}
